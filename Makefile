@@ -1,24 +1,20 @@
 MODULE_NAME := goodix_backport
-
 MODULE_FILENAME := goodix
+KVER?= $(shell uname -r)
+ifneq ($(KERNELRELEASE),)
+	obj-m		:= $(MODULE_NAME).o
+	$(MODULE_NAME)-y	:= $(MODULE_FILENAME).o
+	#EXTRA_CFLAGS += -DDEBUG
 
-LINUXINCLUDE := -I$(PWD)/include $(LINUXINCLUDE)
+else
+	PWD := $(shell pwd)
+	KVER := $(KVER)
+	KDIR := /lib/modules/$(KVER)/build
 
-$(MODULE_NAME)-y	:= $(MODULE_FILENAME).o
-
-obj-m			+= $(MODULE_NAME).o
-
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-default:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-
-install: $(MODULE_NAME).ko $(MODULE_NAME).mod.c
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules_install
-
-uninstall:
-	/bin/bash restore.sh $(MODULE_NAME)
+all:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 clean:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) clean
+	rm -rf *.o *.mod.c *.mod.o *.ko *.symvers *.order *.a
 
+endif
